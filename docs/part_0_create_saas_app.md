@@ -102,14 +102,21 @@ run MyApp
 
 The first line tells Rack that our app lives in the file `app.rb`, which you created above to hold your app's code.  We have to explicitly state that our `app` file is located in the current directory (.) because `require` normally looks only in standard system directories to find gems.
 
-If you're using Cloud9, you're now ready to test-drive our simple app with this command line:
+If you're developing locally, you're now ready to test-drive our simple app with this command line:
+```sh
+$ bundle exec rackup
+```
+
+If you're using Cloud9, you should use this command line:
 
 ```sh
 $ bundle exec rackup -p $PORT -o $IP
 ```
 [Available ports on a hosted Cloud9 workspace](https://docs.c9.io/docs/run-an-application)
 
-This command starts the Rack appserver and the WEBrick webserver.  Prefixing it with `bundle exec` ensures that you are running with the gems specified in `Gemfile.lock`.  Rack will look for `config.ru` and attempt to start our app based on the information there.  If you're using Cloud9, you will see a small popup in the terminal with a URL to your running webapp.  It will open in a new tab in the IDE if you click on it, but you should open up a fresh browser tab and paste in that URL.
+This command starts the Rack appserver and the WEBrick webserver.  Prefixing it with `bundle exec` ensures that you are running with the gems specified in `Gemfile.lock`.  Rack will look for `config.ru` and attempt to start our app based on the information there.
+
+If you're developign locally, you can visit `localhost:9292` in your browser to see the webapp.  If you're using Cloud9, you will see a small popup in the terminal with a URL to your running webapp.  It will open in a new tab in the IDE if you click on it, but you should open up a fresh browser tab and paste in that URL.
 
 Point a new Web browser tab at the running app's URL and verify that you can see "Hello World".
 
@@ -131,7 +138,7 @@ Modify `app.rb` so that instead of "Hello World" it prints "Goodbye World". Save
 
 No changes? Confused?
 
-Now go back to the shell window where you ran `rackup` and press Ctrl-C to stop Rack.  Then type `bundle exec rackup -p $PORT -o $IP` again (for Cloud9), and once it is running, go back to your browser tab with your app and refresh the page.  This time it should work.
+Now go back to the shell window where you ran `rackup` and press Ctrl-C to stop Rack.  Then type `bundle exec rackup` again (`bundle exec rackup -p $PORT -o $IP`, for Cloud9), and once it is running, go back to your browser tab with your app and refresh the page.  This time it should work.
 
 What this shows you is that if you modify your app while it's running, you have to restart Rack in order for it to "see" those changes.  Since restarting it manually is tedious, we'll use the `rerun` gem, which restarts Rack automatically when it sees changes to files in the app's directory. (Rails does this for you by default during development, as we'll see, but Sinatra doesn't.)
 
@@ -155,15 +162,26 @@ Deploy to Heroku
 ----------------
 Heroku is a cloud platform-as-a-service (PaaS) where we can deploy our Sinatra (and later Rails) applications in a more robust way than via Cloud9. If you don't have an account yet, go sign up at http://www.heroku.com. You'll need your login and password for the next step.
 
-If using Cloud9, update your Heroku Toolbelt installation by typing the following command:
+We'll be interacting with Heroku directly from the terminal using the Heroku command-line interface (CLI). First, we'll need to install this. How this is done depends on your development environment:
 
+#### AWS Cloud9 (Amazon Linux)
+The default AWS Cloud9 environment is backed by an EC2 instance running Amazon Linux. Run the following commands in the terminal to set up the Herok CLI on this flavour of Linux:
+```bash
+wget -P /home/ec2-user/ https://cli-assets.heroku.com/heroku-linux-x64.tar.gz
+tar -xf /home/ec2-user/heroku-linux-x64.tar.gz -C /home/ec2-user
+echo 'export PATH=$PATH:~/heroku/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+#### Windows Subsystem for Linux (Ubuntu Linux)
+If you're running Ubuntu  with Windows Subsystem for Linux, or you're running Ubuntu in some other setup, run the following command in the terminal to set up the Heroku CLI:
 ```
 $ wget -O- https://toolbelt.heroku.com/install-ubuntu.sh | sh
 ```
 
-Log in to your Heroku account by typing the command: `heroku login` in the Cloud9 terminal. This will connect your Cloud9 workspace to your Heroku account.
+Once the CLI is successfully installed, log in to your Heroku account by typing the command: `heroku login -i` in the terminal. You'll be prompted for your login credentials. Once logged in, your workspace will be connected to your Heroku account.
 
-While in the root directory of your project (not your whole workspace), type `heroku create` to create a new project in Heroku. This will tell the Heroku service to prepare for some incoming code, and locally on Cloud9, it will add a remote git repository for you called `heroku`.
+While in the root directory of your project (not your whole workspace), type `heroku create` to create a new project in Heroku. This will tell the Heroku service to prepare for some incoming code, and locally it will add a remote git repository for you called `heroku`.
 
 Next, make sure you stage and commit all changes locally as instructed above (i.e. `git add`, `git commit`, etc).
 
@@ -175,9 +193,11 @@ web: bundle exec rackup config.ru -p $PORT
 
 This tells Heroku to start a single web worker (Dyno) using essentially the same command line you used to start Rack locally. Note that in some cases, a `Procfile` is not necessary since Heroku can infer from your files how to start the app. However, it's always better to be explicit.  
 
-Your local Cloud9 repo is now ready to deploy to Heroku:
+Your local repo is now ready to deploy to Heroku:
 
 ```
+$ heroku buildpacks:set https://github.com/bundler/heroku-buildpack-bundler2
+
 $ git push heroku master
 ```
 
